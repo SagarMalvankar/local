@@ -1,0 +1,55 @@
+---
+- hosts: localhost
+  connection: local
+  become: true
+  tasks:
+    - name: Create user
+      ansible.builtin.user:
+         name: "{{ item }}"
+         state: present
+         password: '$6$qf7J7oKrO4d/QFaQ$XggLe8ejd9wJ9yoxNYuockiHh39TdJZ99KVPE7QP7dNkZxLblLEysLAFWvMjB2WNbXHmvtp2gwxcdLZDr/AFb/'
+      with_items: 
+         - "sagar"
+         - "webuser"
+
+    - name: Add user in sudoers
+      copy:
+         dest: "/etc/sudoers.d/sagar"
+         content: "sagar    ALL=(ALL)       ALL" 
+
+    - name: Allow password login
+      replace:
+         path: /etc/ssh/sshd_config
+         regexp: "PasswordAuthentication no"
+         replace: "PasswordAuthentication yes"
+      register: replace
+
+    - name: Reload sshd service
+      service:
+         name: sshd
+         state: reloaded
+      when: replace is changed
+
+    - name: Install httpd service
+      dnf: 
+         name: httpd
+         state: present
+      register: httpinstall
+
+    - name: Start httpd service
+      service:
+         name: httpd
+         state: started
+         enabled: true
+
+    - name: Stop firewalld service
+      service: 
+         name: firewalld
+         state: stopped
+         enabled: false
+
+
+    - name: Add user in sudoers
+      copy:
+         dest: /var/www/html/index.html
+         content: "This request is coming from {{ ansible_all_ipv4_addresses }}"
