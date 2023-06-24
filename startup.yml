@@ -49,7 +49,7 @@
          enabled: false
 
 
-    - name: Add user in sudoers
+    - name: Added index.html
       copy:
          dest: /var/www/html/index.html
          content: "This request is coming from {{ ansible_all_ipv4_addresses }}"
